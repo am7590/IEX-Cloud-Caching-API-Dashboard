@@ -1,30 +1,34 @@
 import streamlit as st
 import requests
 import config
+from iex import IEXStock
 
 symbol = st.sidebar.text_input("Symbol", value="AAPL")
 
+stock = IEXStock(config.IEX_KEY, symbol)
+
 screen = st.sidebar.selectbox("View", ("Overview", "Fundamentals", "News", "Ownership", "Technicals"))
-
-st.write(symbol)
-
 st.title(screen)
 
 if screen == "Overview":
-    url = f"https://cloud.iexapis.com/stable/stock/{symbol}/logo?token={config.IEX_KEY}"
-    r = requests.get(url)
-    response = r.json()
-    st.image(response['url'])
+    logo = stock.get_logo()
+    company_info = stock.get_company_info()
 
-    url = f"https://cloud.iexapis.com/stable/stock/{symbol}/company?token={config.IEX_KEY}"
-    r = requests.get(url)
-    response = r.json()
-    # st.write(response)
+    col1, col2 = st.beta_columns([1, 3])
 
-    st.write(response['companyName'])
-    st.write(response['industry'])
-    st.write(response['CEO'])
+    with col1:
+        st.image(logo['url'])
+
+    with col2:
+        st.subheader(company_info['companyName'])
+        st.subheader("Description")
+        st.write(company_info['description'])
+        st.subheader("Industry")
+        st.write(company_info['industry'])
+        st.subheader("CEO")
+        st.write(company_info['CEO'])
 
 
 if screen == "Fundamentals":
-    pass
+    stats = stock.get_stats()
+    st.write(stats)
